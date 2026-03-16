@@ -18,21 +18,7 @@ These conventions apply whenever you detect workspace markers in the project:
 
 If any of these markers exist, follow all conventions below automatically.
 
----
-
-## 1. When This Applies
-
-Activate these conventions when you detect **any** of:
-- `docs/` directory exists
-- `tools/` directory exists
-- `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` at project root
-- Files matching `NNN-nombre.ext` pattern (3-digit prefix)
-
-You do NOT need the user to ask — apply conventions automatically.
-
----
-
-## 2. Where Does This Go?
+## 1. Where Does This Go?
 
 | What are you creating? | Destination |
 |---|---|
@@ -45,9 +31,7 @@ You do NOT need the user to ask — apply conventions automatically.
 | Executable tool (scripts, CLIs) | `tools/scripts/<name>/` (with SKILL.md) |
 | Instruction-only guidance | `tools/skills/<name>/` (SKILL.md only) |
 
----
-
-## 3. Directory Structure
+## 2. Directory Structure
 
 ### docs/ — Project documentation
 
@@ -76,30 +60,19 @@ tools/
         └── SKILL.md
 ```
 
----
+## 3. File Numbering
 
-## 4. File Numbering
+Format: `NNN-descriptive-name.ext` (3-digit: 001, 002, ...)
+Before creating a file, check the highest existing number and increment by 1.
 
-Format: `NNN-descriptive-name.ext`
+## 4. Rules
 
-- `NNN` = 3-digit sequence (001, 002, ..., 999)
-- Preserves chronological creation order
-- Files sort correctly with `ls`
+- Every tool in `tools/scripts/` or `tools/skills/` MUST have a SKILL.md with description in frontmatter.
+- SKILL.md can also exist inside `src/`, `lib/`, etc. when the user requests it.
+- Save work plans in `docs/planes/NNN-<plan>.md`.
+- Save architectural decisions in `docs/decisiones/NNN-<decision>.md`.
 
-When creating a new file, MUST check the highest existing number in the target directory (`ls docs/<subdir>/`) and increment by 1.
-
----
-
-## 5. Rules
-
-- **Plans** — save work plans in `docs/planes/NNN-<plan>.md`.
-- **Decisions** — save architectural decisions in `docs/decisiones/NNN-<decision>.md`.
-- **SKILL.md in tools** — every tool in `tools/scripts/` or `tools/skills/` MUST have a SKILL.md.
-- **SKILL.md in source** — SKILL.md can also exist inside `src/`, `lib/`, etc. when the user requests it.
-
----
-
-## 6. NEVER Do This
+## 5. NEVER Do This
 
 - NEVER create unnumbered files in docs/ — breaks chronological ordering, causes confusion when switching agents
 - NEVER put executable code in tools/skills/ — skill discovery treats skills/ as instruction-only; executables won't be found by runners
@@ -109,20 +82,7 @@ When creating a new file, MUST check the highest existing number in the target d
 - NEVER create a numbered file without checking the current highest number (`ls docs/<subdir>/` first)
 - NEVER use a number already taken — always increment from the highest existing number
 
----
-
-## 7. Tool Creation Heuristic
-
-When creating a new tool, decide its location:
-
-| Type | Location | Contents |
-|------|----------|----------|
-| **Executable code** (scripts, CLIs, binaries) | `tools/scripts/<name>/` | SKILL.md + code files |
-| **Instructions only** (guides, checklists, prompts) | `tools/skills/<name>/` | SKILL.md only (no code) |
-
----
-
-## 8. Existing Tools
+## 6. Existing Tools
 
 Before creating a new tool, check these locations for existing ones:
 
@@ -134,17 +94,13 @@ Before creating a new tool, check these locations for existing ones:
 
 Do not create duplicates. If a similar tool exists, update it instead.
 
----
-
-## 9. SKILL.md and Instruction Files
+## 7. References
 
 > When creating a tool, follow `references/skill-template.md`
 
 > For instruction file format, see `references/instruction-file-guide.md`
 
----
-
-## 10. Related Tools
+## 8. Related Tools
 
 ### workspace-setup (initial step)
 

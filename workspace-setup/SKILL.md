@@ -2,9 +2,9 @@
 name: workspace-setup
 description: >
   Splits the monolithic /init output into organized docs/arquitectura/ files.
-  Use when the user says "setup", "empieza con la arquitectura", "separa el init",
+  Use when the user says "setup", "init", "empieza con la arquitectura", "separa el init",
   "split the init", or asks to organize the initial instruction file.
-  Reduces the instruction file to <200 lines for optimal agent adherence.
+  Reduces the instruction file to under 200 lines for optimal agent adherence.
   Only runs on-demand — does not auto-activate.
 ---
 
@@ -88,6 +88,20 @@ Use the mapping table to distribute sections from the base file into numbered do
 
 Group related content into the same file. Use separate files only when topics are clearly distinct.
 
+### Section Detection Heuristics
+
+Match H2 headers (`## `) against these patterns:
+
+| Header matches | Destination |
+|---|---|
+| /architect\|structure\|overview\|design\|folder/i | → docs/arquitectura/ |
+| /api\|endpoint\|route\|pattern\|response/i | → docs/especificaciones/ |
+| /env\|config\|setup\|variable\|connection/i | → docs/manuales/ |
+| /build\|dev\|test\|lint\|command\|script/i | stays in instruction file |
+| /depend\|stack\|tech\|framework\|version/i | stays in instruction file |
+
+If a section doesn't match, keep it in instruction file and flag for user review.
+
 ### Step 3b: Extract conditional rules (--agent claude only)
 
 If `--agent` is `claude`, extract technology-specific patterns into `.claude/rules/`:
@@ -124,19 +138,37 @@ Keep only:
 
 **Target:** <200 lines in the final instruction file.
 
----
+### Step 5: Verify
 
-## 4. What This Does NOT Do
-
-- **Does not create** `docs/planes/`, `docs/decisiones/`, `tools/` — those are filled on demand
-- **Does not invoke** workspace-update (no tools exist at this point)
-- **Does not modify** project source code
-- **Does not create symlinks** between instruction files — generates exactly one file
-- **Only creates** `docs/arquitectura/` (and optionally `docs/especificaciones/`, `docs/manuales/` if content exists)
+1. Count lines of the resulting instruction file — MUST be <200
+2. Confirm every H2 section from the original file exists in exactly one destination
+3. If docs/arquitectura/ has more than 6 files, consolidate — over-splitting defeats discoverability
+4. Report to the user: files created, line count of instruction file, any sections that were ambiguous
 
 ---
 
-## 5. After Setup
+## 4. NEVER Do This
+
+- NEVER delete the original file before confirming all content is placed — data loss is unrecoverable
+- NEVER create more than 6 architecture files from a single /init — over-splitting defeats discoverability
+- NEVER put build/dev commands in docs/ — they are high-frequency lookups that belong in the instruction file
+- NEVER create .claude/rules/ for --agent values other than claude — other CLIs don't support conditional rules
+- NEVER create docs/planes/, docs/decisiones/, or tools/ — those fill on demand via workspace-guide
+- NEVER create symlinks between instruction files — generates exactly one file per agent type
+
+---
+
+## 5. Edge Cases
+
+- **Multiple instruction files** (CLAUDE.md + AGENTS.md both with content): ask user which is source, operate on that one only
+- **docs/ already exists with files**: do NOT overwrite — use next available number, warn user
+- **/init output < 50 lines**: do NOT split — inform user file is already minimal
+- **No recognizable H2 sections**: abort — manual splitting needed
+- **Stack not in rules-templates.md**: skip .claude/rules/ creation for that stack, inform user
+
+---
+
+## 6. After Setup
 
 Once the split is complete:
 

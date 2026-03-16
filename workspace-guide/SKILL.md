@@ -6,6 +6,7 @@ description: >
   CLAUDE.md, GEMINI.md, or files matching NNN-*.ext pattern (e.g., 001-arquitectura.md).
   Guides the agent on where to place documents, plans, decisions, scripts, and skills.
   Ensures consistent numbering, proper SKILL.md creation, and minimal instruction files.
+  Does NOT activate in repos without these workspace markers.
 ---
 
 # Workspace Conventions
@@ -31,7 +32,22 @@ You do NOT need the user to ask — apply conventions automatically.
 
 ---
 
-## 2. Directory Structure
+## 2. Where Does This Go?
+
+| What are you creating? | Destination |
+|---|---|
+| Architecture/design documentation | `docs/arquitectura/NNN-<name>.md` |
+| Work plan or analysis | `docs/planes/NNN-<name>.md` |
+| Architecture Decision Record | `docs/decisiones/NNN-<name>.md` |
+| Manual, setup, or config guide | `docs/manuales/NNN-<name>.md` |
+| Functional/technical spec | `docs/especificaciones/NNN-<name>.md` |
+| SQL script or data analysis | `docs/scripts/<topic>/NNN-<name>.sql` |
+| Executable tool (scripts, CLIs) | `tools/scripts/<name>/` (with SKILL.md) |
+| Instruction-only guidance | `tools/skills/<name>/` (SKILL.md only) |
+
+---
+
+## 3. Directory Structure
 
 ### docs/ — Project documentation
 
@@ -62,39 +78,40 @@ tools/
 
 ---
 
-## 3. File Numbering
+## 4. File Numbering
 
 Format: `NNN-descriptive-name.ext`
 
 - `NNN` = 3-digit sequence (001, 002, ..., 999)
 - Preserves chronological creation order
 - Files sort correctly with `ls`
-- Context survives when switching between agents
 
-Examples:
-```
-docs/planes/001-feature-login.md
-docs/planes/002-refactor-auth.md
-docs/decisiones/001-uso-angular-16.md
-docs/scripts/ddl/001-create-tables.sql
-```
-
-When creating a new file in an existing directory, check the highest existing number and increment by 1.
+When creating a new file, MUST check the highest existing number in the target directory (`ls docs/<subdir>/`) and increment by 1.
 
 ---
 
-## 4. Rules
+## 5. Rules
 
-- **No build/test** — do not execute build or test commands during editing. Wait for the user to request it.
-- **No git** — do not make commits or any git operations.
 - **Plans** — save work plans in `docs/planes/NNN-<plan>.md`.
 - **Decisions** — save architectural decisions in `docs/decisiones/NNN-<decision>.md`.
-- **SKILL.md in tools** — every tool in `tools/scripts/` or `tools/skills/` must have a SKILL.md.
+- **SKILL.md in tools** — every tool in `tools/scripts/` or `tools/skills/` MUST have a SKILL.md.
 - **SKILL.md in source** — SKILL.md can also exist inside `src/`, `lib/`, etc. when the user requests it.
 
 ---
 
-## 5. Tool Creation Heuristic
+## 6. NEVER Do This
+
+- NEVER create unnumbered files in docs/ — breaks chronological ordering, causes confusion when switching agents
+- NEVER put executable code in tools/skills/ — skill discovery treats skills/ as instruction-only; executables won't be found by runners
+- NEVER create a SKILL.md without a description in frontmatter — the tool becomes invisible to all agent skill discovery systems
+- NEVER duplicate content between the instruction file and docs/ — creates drift; instruction file should only reference docs/
+- NEVER create docs/planes/ or docs/decisiones/ during initial setup — they fill on demand; empty dirs clutter the workspace
+- NEVER create a numbered file without checking the current highest number (`ls docs/<subdir>/` first)
+- NEVER use a number already taken — always increment from the highest existing number
+
+---
+
+## 7. Tool Creation Heuristic
 
 When creating a new tool, decide its location:
 
@@ -103,15 +120,9 @@ When creating a new tool, decide its location:
 | **Executable code** (scripts, CLIs, binaries) | `tools/scripts/<name>/` | SKILL.md + code files |
 | **Instructions only** (guides, checklists, prompts) | `tools/skills/<name>/` | SKILL.md only (no code) |
 
-Examples:
-- Database migration script → `tools/scripts/db-migrate/` (has `.sh` files)
-- Deploy guide with steps → `tools/skills/deploy/` (instructions only)
-- Seed data generator → `tools/scripts/seed-data/` (has `.py` files)
-- Testing checklist → `tools/skills/testing/` (instructions only)
-
 ---
 
-## 6. Existing Tools
+## 8. Existing Tools
 
 Before creating a new tool, check these locations for existing ones:
 
@@ -125,113 +136,15 @@ Do not create duplicates. If a similar tool exists, update it instead.
 
 ---
 
-## 7. SKILL.md Format
+## 9. SKILL.md and Instruction Files
 
-Use the template in `references/skill-template.md` for creating new SKILL.md files.
+> When creating a tool, follow `references/skill-template.md`
 
-### For tools/scripts/ (executable code)
-
-```markdown
----
-name: <tool-name>
-description: |
-  What this tool does (1-3 lines).
-  When to use it.
----
-
-# <tool-name>
-
-## Requirements
-- Runtime/dependencies needed
-
-## Usage
-\`\`\`bash
-<command to run>
-\`\`\`
-
-## Files
-- `001-file.ext` — what it does
-- `002-file.ext` — what it does
-```
-
-### For tools/skills/ (instructions only)
-
-```markdown
----
-name: <skill-name>
-description: |
-  What this skill guides (1-3 lines).
-  When to use it.
----
-
-# <skill-name>
-
-## Prerequisites
-- What must be in place
-
-## Steps
-1. First step
-2. Second step
-3. Third step
-
-## Notes
-- Important considerations
-```
+> For instruction file format, see `references/instruction-file-guide.md`
 
 ---
 
-## 8. Project Instruction File
-
-The project instruction file can be `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` depending on the user's CLI:
-
-| CLI | Instruction file |
-|-----|-----------------|
-| Claude Code | `CLAUDE.md` |
-| Gemini CLI | `GEMINI.md` |
-| Codex, Warp, Crush, OpenCode | `AGENTS.md` |
-
-**Rules for the instruction file:**
-- Content is identical regardless of filename
-- Keep it minimal: <200 lines
-- Must contain: name, description, stack, commands, references to `docs/`
-- When editing, find which file exists at project root and modify that one
-- Do not create symlinks between instruction files
-
-**Minimal structure:**
-
-```markdown
-# <Project Name>
-
-<1-2 line description>
-
-## Stack
-- <language> <version>
-- <framework> <version>
-
-## Commands
-- Dev: `<dev command>`
-- Build: `<build command>`
-- Test: `<test command>`
-
-## Structure
-> See docs/arquitectura/001-arquitectura.md
-
-## Conventions
-> See docs/decisiones/
-
-## Rules
-- Documents/artifacts: `docs/<topic>/`
-- Tools/scripts: `tools/scripts/<tool>/`
-- No build/test during editing
-- No git commits
-- Numbered files: `NNN-name.ext`
-- Include SKILL.md in tools
-- Plans and decisions saved in docs/
-```
-
----
-
-## 9. Related Tools
+## 10. Related Tools
 
 ### workspace-setup (initial step)
 
